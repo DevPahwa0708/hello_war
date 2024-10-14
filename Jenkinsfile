@@ -1,57 +1,58 @@
+#!/usr/bin/env groovy
+import hudson.model.*
+import hudson.EnvVars
+import groovy.json.JsonSlurperClassic
+import groovy.json.JsonBuilder
+import groovy.json.JsonOutput
+import java.net.URL
+
 pipeline {
     agent any
-     tools {
-        maven 'Maven' 
-        }
-    stages {
-        stage("Test"){
-            steps{
-                // mvn test
-                sh "mvn test"
-                slackSend channel: 'youtubejenkins', message: 'Job Started'
-                
-            }
-            
-        }
-        stage("Build"){
-            steps{
-                sh "mvn package"
-                
-            }
-            
-        }
-        stage("Deploy on Test"){
-            steps{
-                // deploy on container -> plugin
-                deploy adapters: [tomcat9(credentialsId: 'tomcatserverdetails1', path: '', url: 'http://192.168.0.118:8080')], contextPath: '/app', war: '**/*.war'
-              
-            }
-            
-        }
-        stage("Deploy on Prod"){
-             input {
-                message "Should we continue?"
-                ok "Yes we Should"
-            }
-            
-            steps{
-                // deploy on container -> plugin
-                deploy adapters: [tomcat9(credentialsId: 'tomcatserverdetails1', path: '', url: 'http://192.168.0.119:8080')], contextPath: '/app', war: '**/*.war'
-
-            }
-        }
+    tools {
+        maven 'maven'
+        jdk 'java-21'
     }
-    post{
-        always{
-            echo "========always========"
+    environment {
+        PROJECT_ID = 'wb-gcp-stg' // Your actual GCP project ID
+        REGION = 'asia-south1' // Replace with your desired region
+        REPOSITORY = 'wb-staging-repo' // Replace with your Artifact Registry repository name
+    }
+    stages {
+        stage('Build') {
+            steps {
+                echo "Creating New Build"
+                sh 'mvn clean install'
+            }
         }
-        success{
-            echo "========pipeline executed successfully ========"
-             slackSend channel: 'youtubejenkins', message: 'Success'
+        stage('Authenticate with Google Cloud') {
+            steps {
+                script {
+                    // Authenticate using the service account key
+                    withCredentials([file(credentialsId: 'c2021550-56ea-4beb-9c80-35657413c178', variable: 'GOOGLE_CREDENTIALS')]) {
+                        sh '''
+                        gcloud auth activate-service-account --key-file=$GOOGLE_CREDENTIALS
+                        gcloud config set project ${PROJECT_ID}
+                        gcloud auth configure-docker ${REGION}-docker.pkg.dev
+                        '''
+                    }
+                }
+            }
         }
-        failure{
-            echo "========pipeline execution failed========"
-             slackSend channel: 'youtubejenkins', message: 'Job Failed'
+        stage('Build and Push Docker Image to Artifact Registry') {
+            steps {
+                script {
+                    def customImage = docker.build("${REGION}-docker.pkg.dev/${env.PROJECT_ID}/${env.REPOSITORY}/${env.JOB_NAME.toLowerCase()}:${env.BUILD_NUMBER}")
+
+                    // Push the Docker image to Artifact Registry
+                    customImage.push("${env.BUILD_NUMBER}")
+                    customImage.push("latest")
+                }
+            }
+        }
+        stage('Deploying on UAT') {
+            steps {
+                sh '/opt/ansible/playbook/deploy.sh'
+            }
         }
     }
 }

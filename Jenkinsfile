@@ -8,7 +8,7 @@ pipeline {
         jdk 'java-21'
     }
     environment {
-        AWS_REGION = 'us-eat-2' // Replace with your desired AWS region
+        AWS_REGION = 'us-east-2' // Replace with your desired AWS region
         ECR_REPOSITORY = 'test' // Replace with your ECR repository name
         AWS_ACCOUNT_ID = '449468931146' // Replace with your AWS account ID
     }

@@ -1,10 +1,5 @@
 #!/usr/bin/env groovy
 import hudson.model.*
-import hudson.EnvVars
-import groovy.json.JsonSlurperClassic
-import groovy.json.JsonBuilder
-import groovy.json.JsonOutput
-import java.net.URL
 
 pipeline {
     agent any
@@ -13,9 +8,9 @@ pipeline {
         jdk 'java-21'
     }
     environment {
-        PROJECT_ID = 'wb-gcp-stg' // Your actual GCP project ID
-        REGION = 'asia-south1' // Replace with your desired region
-        REPOSITORY = 'wb-staging-repo' // Replace with your Artifact Registry repository name
+        AWS_REGION = 'us-eat-2' // Replace with your desired AWS region
+        ECR_REPOSITORY = 'test' // Replace with your ECR repository name
+        AWS_ACCOUNT_ID = '449468931146' // Replace with your AWS account ID
     }
     stages {
         stage('Build') {
@@ -24,26 +19,24 @@ pipeline {
                 sh 'mvn clean install'
             }
         }
-        stage('Authenticate with Google Cloud') {
+        stage('Authenticate with AWS') {
             steps {
                 script {
-                    // Authenticate using the service account key
-                    withCredentials([file(credentialsId: 'c2021550-56ea-4beb-9c80-35657413c178', variable: 'GOOGLE_CREDENTIALS')]) {
+                    // Authenticate using AWS CLI
+                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials']]) {
                         sh '''
-                        gcloud auth activate-service-account --key-file=$GOOGLE_CREDENTIALS
-                        gcloud config set project ${PROJECT_ID}
-                        gcloud auth configure-docker ${REGION}-docker.pkg.dev
+                        aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
                         '''
                     }
                 }
             }
         }
-        stage('Build and Push Docker Image to Artifact Registry') {
+        stage('Build and Push Docker Image to ECR') {
             steps {
                 script {
-                    def customImage = docker.build("${REGION}-docker.pkg.dev/${env.PROJECT_ID}/${env.REPOSITORY}/${env.JOB_NAME.toLowerCase()}:${env.BUILD_NUMBER}")
+                    def customImage = docker.build("${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${env.ECR_REPOSITORY}:${env.BUILD_NUMBER}")
 
-                    // Push the Docker image to Artifact Registry
+                    // Push the Docker image to ECR
                     customImage.push("${env.BUILD_NUMBER}")
                     customImage.push("latest")
                 }

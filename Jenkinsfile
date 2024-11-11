@@ -48,7 +48,7 @@ pipeline {
                         withCredentials([string(credentialsId: 'pass_wb_uat', variable: 'SERVER_PASSWORD')]) {
                             // Use sshpass to provide the password and copy the WAR file via SCP
                             sh """
-                                sshpass -p ${SERVER_PASSWORD} scp -rP ${SERVER_PORT} ${warFileName} ${SERVER_USER}@${SERVER_HOST}:
+                                sshpass -p ddev@987 scp -rP ${SERVER_PORT} ${warFileName} ${SERVER_USER}@${SERVER_HOST}:
                             """
                         }
                     } else {

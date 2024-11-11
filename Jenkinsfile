@@ -48,9 +48,9 @@ pipeline {
                                 sshpass -p \$SERVER_PASSWORD scp -o StrictHostKeyChecking=no -rP ${SERVER_PORT} ${warFile} ${SERVER_USER}@${SERVER_HOST}:${SERVER_PATH}
                             """
                             // Trigger deploy.sh script on the remote server using SSH
-                    // sh """
-                    //     sshpass -p \$SERVER_PASSWORD ssh -o StrictHostKeyChecking=no -rP ${SERVER_PORT} ${SERVER_USER}@${SERVER_HOST} 'bash ${SERVER_PATH}/deploy.sh'
-                    // """
+                    sh """
+                        sshpass -p \$SERVER_PASSWORD ssh -o StrictHostKeyChecking=no -rP ${SERVER_PORT} ${SERVER_USER}@${SERVER_HOST} 'bash ${SERVER_PATH}/deploy.sh'
+                    """
                         }
                     } else {
                         error "No WAR file found in target directory"

@@ -35,7 +35,8 @@ pipeline {
             steps {
                 script {
                     // Find the WAR file in the target directory
-                    def warFile = sh(script: "find target -name '*.war'", returnStdout: true).trim()
+                    //def warFile = sh(script: "find target -name '*.war'", returnStdout: true).trim()
+                    def warFile = sh(script: "find target -maxdepth 1 -name '*.war'", returnStdout: true).trim()
                     
                     if (warFile) {
                         echo "Found WAR file: ${warFile}"

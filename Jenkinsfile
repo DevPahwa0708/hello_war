@@ -41,10 +41,10 @@ pipeline {
                         echo "Found WAR file: ${warFile}"
 
                         // Use withCredentials to securely inject the password into the pipeline
-                        withCredentials([usernamePassword(credentialsId:'wb-uat', passwordVariable: 'SERVER_PASSWORD', usernameVariable: 'SERVER_USER')]) {
+                        withCredentials([string(credentialsId: 'pass_wb_uat', variable: 'SERVER_PASSWORD')]) {
                             // Use sshpass to provide the password and copy the WAR file via SCP
                             sh """
-                                sshpass -p "\${SERVER_PASSWORD}" scp -P ${SERVER_PORT} ${warFile} \${SERVER_USER}@${SERVER_HOST}:${SERVER_PATH}
+                                sshpass -p "\${SERVER_PASSWORD}" scp -P ${SERVER_PORT} ${warFile} ${SERVER_USER}@${SERVER_HOST}:${SERVER_PATH}
                             """
                         }
                     } else {

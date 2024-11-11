@@ -1,16 +1,28 @@
 #!/usr/bin/env groovy
 import hudson.model.*
+import hudson.EnvVars
+import groovy.json.JsonSlurperClassic
+import groovy.json.JsonBuilder
+import groovy.json.JsonOutput
+import java.net.URL
 
 pipeline {
     agent any
     tools {
         maven 'maven'
-        jdk 'java-21'
+        jdk 'java-1.8'
+    }
+    parameters {
+        // A choice parameter to select which Tomcat instance to deploy to
+        choice(name: 'TOMCAT_INSTANCE', choices: ['tomcat1', 'tomcat2', 'tomcat3', 'tomcat4', 'tomcat5', 'tomcat6', 'tomcat7'], 
+               description: 'Select the Tomcat instance to deploy to')
     }
     environment {
-        AWS_REGION = 'us-east-2' // Replace with your desired AWS region
-        ECR_REPOSITORY = 'test' // Replace with your ECR repository name
-        AWS_ACCOUNT_ID = '449468931146' // Replace with your AWS account ID
+        SERVER_USER = 'ddev'           // Replace with your server's username
+        SERVER_HOST = '192.168.200.70'     // Replace with your server's hostname or IP
+        SERVER_PORT = '5505'
+        SERVER_PATH = '/home/ddev/jenkins/' // Replace with your destination directory on the server
+        SERVER_PASSWORD = credentials('wb-uat') // Use Jenkins credentials for the server passwordy
     }
     stages {
         stage('Build') {
@@ -19,32 +31,23 @@ pipeline {
                 sh 'mvn clean install'
             }
         }
-        stage('Authenticate with AWS') {
+        stage('Copy WAR file to Server') {
             steps {
                 script {
-                    // Authenticate using AWS CLI
-                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials']]) {
-                        sh '''
-                        aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
-                        '''
+                    // Find the WAR file in the target directory
+                    def warFile = sh(script: "find target -name '*.war'", returnStdout: true).trim()
+                    
+                    if (warFile) {
+                        echo "Found WAR file: ${warFile}"
+
+                        // Use SCP to copy the WAR file to the remote server
+                        sh """
+                            sshpass -p '${SERVER_PASSWORD}' scp -P ${SERVER_PORT} ${warFile} ${SERVER_USER}@${SERVER_HOST}:${SERVER_PATH}
+                        """
+                    } else {
+                        error "No WAR file found in target directory"
                     }
                 }
-            }
-        }
-        stage('Build and Push Docker Image to ECR') {
-            steps {
-                script {
-                    def customImage = docker.build("${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${env.ECR_REPOSITORY}:${env.BUILD_NUMBER}")
-
-                    // Push the Docker image to ECR
-                    customImage.push("${env.BUILD_NUMBER}")
-                    customImage.push("latest")
-                }
-            }
-        }
-        stage('Deploying on UAT') {
-            steps {
-                sh '/opt/ansible/playbook/deploy.sh'
             }
         }
     }

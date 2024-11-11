@@ -22,7 +22,7 @@ pipeline {
         SERVER_HOST = '192.168.200.70'     // Replace with your server's hostname or IP
         SERVER_PORT = '5505'
         SERVER_PATH = '/home/ddev/jenkins/' // Replace with your destination directory on the server
-        SERVER_PASSWORD = credentials('wb-uat') // Use Jenkins credentials for the server passwordy
+       // SERVER_PASSWORD = credentials('wb-uat') // Use Jenkins credentials for the server passwordy
     }
     stages {
         stage('Build') {
@@ -32,6 +32,10 @@ pipeline {
             }
         }
         stage('Copy WAR file to Server') {
+            environment {
+                // Bind the Jenkins credentials securely to environment variables
+                SERVER_PASSWORD = credentials('wb-uat') // Jenkins credentials ID for password
+            }
             steps {
                 script {
                     // Find the WAR file in the target directory

@@ -40,9 +40,6 @@ pipeline {
                     
                     if (warFile) {
                         echo "Found WAR file: ${warFile}"
-                        def warFileName = sh(script: "basename ${warFile}", returnStdout: true).trim()
-
-                        echo "WAR file to transfer: ${warFileName}"
 
                         // Use withCredentials to securely inject the password into the pipeline
                         withCredentials([string(credentialsId: 'pass_wb_uat', variable: 'SERVER_PASSWORD')]) {

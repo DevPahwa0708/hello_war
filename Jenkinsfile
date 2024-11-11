@@ -49,7 +49,7 @@ pipeline {
                             """
                             // Trigger deploy.sh script on the remote server using SSH
                     // sh """
-                    //     sshpass -p \$SERVER_PASSWORD ssh -o StrictHostKeyChecking=no ${SERVER_USER}@${SERVER_HOST} 'bash ${SERVER_PATH}/deploy.sh'
+                    //     sshpass -p \$SERVER_PASSWORD ssh -o StrictHostKeyChecking=no -rP ${SERVER_PORT} ${SERVER_USER}@${SERVER_HOST} 'bash ${SERVER_PATH}/deploy.sh'
                     // """
                         }
                     } else {

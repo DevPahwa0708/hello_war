@@ -34,7 +34,7 @@ pipeline {
         stage('Copy WAR file to Server') {
             environment {
                 // Bind the Jenkins credentials securely to environment variables
-                SERVER_PASSWORD = credentials('wb-uat') // Jenkins credentials ID for password
+                SERVER_PASSWORD = credentials('pass_wb_uat') // Jenkins credentials ID for password
             }
             steps {
                 script {

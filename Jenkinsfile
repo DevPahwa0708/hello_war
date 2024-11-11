@@ -40,12 +40,15 @@ pipeline {
                     
                     if (warFile) {
                         echo "Found WAR file: ${warFile}"
+                        def warFileName = sh(script: "basename ${warFile}", returnStdout: true).trim()
+
+                        echo "WAR file to transfer: ${warFileName}"
 
                         // Use withCredentials to securely inject the password into the pipeline
                         withCredentials([string(credentialsId: 'pass_wb_uat', variable: 'SERVER_PASSWORD')]) {
                             // Use sshpass to provide the password and copy the WAR file via SCP
                             sh """
-                                sshpass -p "\${SERVER_PASSWORD}" scp -rP ${SERVER_PORT} ${warFile} ${SERVER_USER}@${SERVER_HOST}:
+                                sshpass -p "\${SERVER_PASSWORD}" scp -rP ${SERVER_PORT} ${warFileName} ${SERVER_USER}@${SERVER_HOST}:
                             """
                         }
                     } else {

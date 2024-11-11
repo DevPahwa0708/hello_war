@@ -32,10 +32,6 @@ pipeline {
             }
         }
         stage('Copy WAR file to Server') {
-            environment {
-                // Bind the Jenkins credentials securely to environment variables
-                SERVER_PASSWORD = credentials('pass_wb_uat') // Jenkins credentials ID for password
-            }
             steps {
                 script {
                     // Find the WAR file in the target directory
@@ -44,10 +40,13 @@ pipeline {
                     if (warFile) {
                         echo "Found WAR file: ${warFile}"
 
-                        // Use SCP to copy the WAR file to the remote server
-                        sh """
-                            sshpass -p '${SERVER_PASSWORD}' scp -P ${SERVER_PORT} ${warFile} ${SERVER_USER}@${SERVER_HOST}:${SERVER_PATH}
-                        """
+                        // Use withCredentials to securely inject the password into the pipeline
+                        withCredentials([usernamePassword(credentialsId:'pass_wb_uat', passwordVariable: 'SERVER_PASSWORD', usernameVariable: 'SERVER_USER')]) {
+                            // Use sshpass to provide the password and copy the WAR file via SCP
+                            sh """
+                                sshpass -p "\${SERVER_PASSWORD}" scp -P ${SERVER_PORT} ${warFile} \${SERVER_USER}@${SERVER_HOST}:${SERVER_PATH}
+                            """
+                        }
                     } else {
                         error "No WAR file found in target directory"
                     }

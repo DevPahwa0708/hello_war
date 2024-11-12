@@ -14,7 +14,7 @@ pipeline {
     }
     parameters {
         // A choice parameter to select which Tomcat instance to deploy to
-        choice(name: 'TOMCAT_INSTANCE', choices: ['tomcat1', 'tomcat3', 'tomcat4', 'tomcat5', 'tomcat6', 'tomcat7', 'tomcat4_local_server', 'tomcat-cscac', 'tomcat-wac', 'tomcat_wat', 'tomcat_wet'], 
+        choice(name: 'TOMCAT_INSTANCE', choices: ['tomcat1', 'tomcat3', 'tomcat4', 'tomcat5', 'tomcat6', 'tomcat7', 'tomcat4_local_server', 'tomcat-cscac', 'tomcat-wac', 'tomcat_wat', 'tomcat_wet', 'tomcat-poc'], 
                description: 'Select the Tomcat instance to deploy to')
     }
     environment {

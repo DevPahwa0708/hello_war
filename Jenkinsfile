@@ -43,51 +43,56 @@ pipeline {
 
                         // Use withCredentials to securely inject the password into the pipeline
                         withCredentials([string(credentialsId: 'pass_wb_uat', variable: 'SERVER_PASSWORD')]) {
-                            // Use sshpass to provide the password and copy the WAR file via SCP
-                            sh """
-                                sshpass -p \$SERVER_PASSWORD scp -o StrictHostKeyChecking=no -rP ${SERVER_PORT} ${warFile} ${SERVER_USER}@${SERVER_HOST}:${SERVER_PATH}
-                            """
-                            // Determine the correct deploy.sh path based on the TOMCAT_INSTANCE parameter
-                            def deployScriptPath = ''
+                            // Determine the correct Tomcat folder path based on the selected Tomcat instance
+                            def tomcatFolder = ''
                             switch (params.TOMCAT_INSTANCE) {
                                 case 'tomcat1':
-                                    deployScriptPath = "${SERVER_PATH}/tomcat1/deploy.sh"
+                                    tomcatFolder = "tomcat1"
                                     break
                                 case 'tomcat3':
-                                    deployScriptPath = "${SERVER_PATH}/tomcat3/deploy.sh"
+                                    tomcatFolder = "tomcat3"
                                     break
                                 case 'tomcat4':
-                                    deployScriptPath = "${SERVER_PATH}/tomcat4/deploy.sh"
+                                    tomcatFolder = "tomcat4"
                                     break
                                 case 'tomcat5':
-                                    deployScriptPath = "${SERVER_PATH}/tomcat5/deploy.sh"
+                                    tomcatFolder = "tomcat5"
                                     break
                                 case 'tomcat6':
-                                    deployScriptPath = "${SERVER_PATH}/tomcat6/deploy.sh"
+                                    tomcatFolder = "tomcat6"
                                     break
                                 case 'tomcat7':
-                                    deployScriptPath = "${SERVER_PATH}/tomcat7/deploy.sh"
+                                    tomcatFolder = "tomcat7"
                                     break
                                 case 'tomcat4_local_server':
-                                    deployScriptPath = "${SERVER_PATH}/tomcat4_local_server/deploy.sh"
+                                    tomcatFolder = "tomcat4_local_server"
                                     break
                                 case 'tomcat-cscac':
-                                    deployScriptPath = "${SERVER_PATH}/tomcat-cscac/deploy.sh"
+                                    tomcatFolder = "tomcat-cscac"
                                     break
                                 case 'tomcat-wac':
-                                    deployScriptPath = "${SERVER_PATH}/tomcat-wac/deploy.sh"
+                                    tomcatFolder = "tomcat-wac"
                                     break
                                 case 'tomcat_wat':
-                                    deployScriptPath = "${SERVER_PATH}/tomcat_wat/deploy.sh"
+                                    tomcatFolder = "tomcat_wat"
                                     break
                                 case 'tomcat_wet':
-                                    deployScriptPath = "${SERVER_PATH}/tomcat_wet/deploy.sh"
+                                    tomcatFolder = "tomcat_wet"
                                     break
                                 default:
                                     error "Unknown Tomcat instance: ${params.TOMCAT_INSTANCE}"
                             }
 
-                            // Trigger the deploy.sh script on the selected Tomcat instance using SSH
+                            // Construct the target path to copy the WAR file to the selected Tomcat folder
+                            def targetPath = "${SERVER_PATH}/${tomcatFolder}"
+
+                            // Use sshpass to securely copy the WAR file to the appropriate Tomcat folder
+                            sh """
+                                sshpass -p \$SERVER_PASSWORD scp -o StrictHostKeyChecking=no -rP ${SERVER_PORT} ${warFile} ${SERVER_USER}@${SERVER_HOST}:${targetPath}/
+                            """
+
+                            // Trigger the deploy.sh script on the selected Tomcat instance
+                            def deployScriptPath = "${SERVER_PATH}/${tomcatFolder}/deploy.sh"
                             sh """
                                 sshpass -p \$SERVER_PASSWORD ssh -o StrictHostKeyChecking=no -p ${SERVER_PORT} ${SERVER_USER}@${SERVER_HOST} 'bash ${deployScriptPath}'
                             """

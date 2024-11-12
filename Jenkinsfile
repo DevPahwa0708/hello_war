@@ -79,6 +79,9 @@ pipeline {
                                 case 'tomcat_wet':
                                     tomcatFolder = "tomcat_wet"
                                     break
+                                case 'tomcat-poc':
+                                    tomcatFolder = "tomcat-poc"
+                                    break
                                 default:
                                     error "Unknown Tomcat instance: ${params.TOMCAT_INSTANCE}"
                             }

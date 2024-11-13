@@ -97,8 +97,7 @@ pipeline {
                             // Trigger the deploy.sh script on the selected Tomcat instance
                             def deployScriptPath = "${SERVER_PATH}/${tomcatFolder}/deploy.sh"
                             sh """
-                                sshpass -p \$SERVER_PASSWORD ssh -o StrictHostKeyChecking=no -p ${SERVER_PORT} ${SERVER_USER}@${SERVER_HOST} 'bash ${deployScriptPath}'
-                            """
+                                sshpass -p \$SERVER_PASSWORD ssh -o StrictHostKeyChecking=no -p ${SERVER_PORT} ${SERVER_USER}@${SERVER_HOST} 'echo \$SERVER_PASSWORD | sudo -S bash ${deployScriptPath}'
                         }
                     } else {
                         error "No WAR file found in target directory"

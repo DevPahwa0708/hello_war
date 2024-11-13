@@ -98,7 +98,7 @@ pipeline {
                             def deployScriptPath = "${SERVER_PATH}/${tomcatFolder}/deploy.sh"
                             sh """
                             # Use sshpass to provide password, and sudo to switch to root
-                            echo \$SERVER_PASSWORD | sudo -S ssh -o StrictHostKeyChecking=no -p ${SERVER_PORT} ${SERVER_USER}@${SERVER_HOST} 'bash ${deployScriptPath}'
+                            sshpass -p \$SERVER_PASSWORD ssh -o StrictHostKeyChecking=no -p ${SERVER_PORT} ${SERVER_USER}@${SERVER_HOST} 'echo \$SERVER_PASSWORD | sudo -S bash ${deployScriptPath}'
                          """
                         }
                     } else {

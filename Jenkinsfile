@@ -93,13 +93,13 @@ pipeline {
                             sh """
                                 sshpass -p \$SERVER_PASSWORD scp -o StrictHostKeyChecking=no -rP ${SERVER_PORT} ${warFile} ${SERVER_USER}@${SERVER_HOST}:${targetPath}/
                             """
-
+                            echo "War File ${warFile} successfully copied to path ${targetPath}"
                             // Trigger the deploy.sh script on the selected Tomcat instance
-                            def deployScriptPath = "${SERVER_PATH}/${tomcatFolder}/deploy.sh"
-                            sh """
-                            # Use sshpass to provide password, and sudo to switch to root
-                            sshpass -p \$SERVER_PASSWORD ssh -o StrictHostKeyChecking=no -p ${SERVER_PORT} ${SERVER_USER}@${SERVER_HOST} 'bash ${deployScriptPath}'
-                         """
+//                            def deployScriptPath = "${SERVER_PATH}/${tomcatFolder}/deploy.sh"
+//                           sh """
+//                            # Use sshpass to provide password, and sudo to switch to root
+//                            sshpass -p \$SERVER_PASSWORD ssh -o StrictHostKeyChecking=no -p ${SERVER_PORT} ${SERVER_USER}@${SERVER_HOST} 'bash ${deployScriptPath}'
+//                         """
                         }
                     } else {
                         error "No WAR file found in target directory"

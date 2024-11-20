@@ -5,8 +5,8 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>com.springhow.example</groupId>
-  <artifactId>hello-world</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <artifactId>world</artifactId>
+  <version>SNAPSHOT</version>
   <packaging>war</packaging>
 
   <name>hello-world</name>
